@@ -7,7 +7,7 @@
 
 #include "french_translate.h"
 #include <stdio.h>
-#include <string.h> // strchr
+#include <string.h> // memchr
 #include "uart_interrupt.h" // uart_buffer
 
 #define ENGLISH          0
@@ -17,7 +17,7 @@
 
 static char *dictionary[NUM_LANG][DICTIONARY_SIZE] =
 {
-        { "Hello", "Goodbye","Thank you", "Man", "Woman" },
+        { "Hello", "Goodbye", "Thank you", "Man", "Woman" },
         { "Bonjour", "Au revoir", "Merci", "Homme", "Femme" }
 };
 
@@ -25,9 +25,13 @@ char *translate_to_french(char const * const string, int size) {
     char *string_out = NULL;
     // Search for word translation in the dictionary
     for (int i = 0; i < DICTIONARY_SIZE; i++) {
-        if (strncmp( string,  dictionary[ENGLISH][i], size) == 0) {
-            string_out = dictionary[FRENCH][i];
-            break;
+        if (strncmp(string,  dictionary[ENGLISH][i], size) == 0) {
+            //Check that words are same size
+            //strlen is sufficient because strings are static
+            if (size == strlen(dictionary[ENGLISH][i])){
+                string_out = dictionary[FRENCH][i];
+                break;
+            }
         }
     }
     return string_out;
@@ -49,22 +53,13 @@ void french_translate() {
      * implementation, so no data is lost
      */
 
-    // DBG
-    printf("dbg - %s\n", uart_buffer.buf);
-
     // 1. check if the buffer has CR character
-    if (NULL == strchr(uart_buffer.buf, '\n')) {
-        // dbg
-        printf("nope\n");
-
+    if (NULL == memchr(uart_buffer.buf, '\n', uart_buffer.size)) {
         return;
     }
 
     // 2. we've got the word, copy the buffer
     uart_buffer_t local = uart_buffer;
-
-    // dbg
-    printf("GREAT SUCCESS %s - %i\n", local.buf, local.size);
 
     // 3 and reset it
     ATOMIC_SET(uart_buffer.size, 0);
