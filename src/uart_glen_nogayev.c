@@ -8,11 +8,11 @@
  ============================================================================
  */
 
-#include <stdio.h> // putc, printf
+#include <stdio.h> // putc, printf, getchar()
 #include <stdlib.h> // putc, printf
-
 #include <stdbool.h> // true
 
+#include "french_translate.h" //  french_translate();
 
 /**
  * We assume that CPU runs some posix compatible OS. E.g. QNX, Embedded linux.
@@ -42,13 +42,12 @@ int main(void) {
      * and interrupt. UART send mode could be any - polling, DMA.
      */
 
-
     // idel process infinite loop
-    while (true){
+    while (true) {
 
         /* 1. task/ process thread scheduling
-         * in our case "franch translate" process scheduling */
-        // uart_franch_translate
+         * in our case "french translate" process scheduling */
+        french_translate();
 
         /* 2. we assume shceduler calls other concuring tasks as
          * by the given requirments "franch translate" is just a side process that should not
@@ -61,13 +60,18 @@ int main(void) {
          */
         // go_to_pc()
 
-
         /* 4. this statement is just a simulation of the interrupt event
          * that wakes up the CPU.
          * For us to make it debuggable on linux, we read a caracter from stdin
          * and call dummy function that simulates a interrupt handler.
          * In this code we skip details of enabling an interrupt handler.
          */
+        char rxed_from_uart = getchar();
+        extern char uart_to_interrupt_dummy_interface;
+        uart_to_interrupt_dummy_interface = rxed_from_uart;
+        void uart_interrupt_handler(); // #4 is a hack, just a debug interface, therefore not in header
+        uart_interrupt_handler();
+        // printf(">>%c<<", rxed_from_uart);
     }
 
     return EXIT_SUCCESS;
