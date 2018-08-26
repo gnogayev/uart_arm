@@ -17,15 +17,15 @@
 
 static char *dictionary[NUM_LANG][DICTIONARY_SIZE] =
 {
-        { "Hello\n", "Goodbye\n","Thank you\n", "Man\n", "Woman\n" },
+        { "Hello", "Goodbye","Thank you", "Man", "Woman" },
         { "Bonjour", "Au revoir", "Merci", "Homme", "Femme" }
 };
 
-char *translate_to_french(char *string, int size) {
+char *translate_to_french(char const * const string, int size) {
     char *string_out = NULL;
     // Search for word translation in the dictionary
     for (int i = 0; i < DICTIONARY_SIZE; i++) {
-        if (strncmp((const char*) string, (const char*) dictionary[ENGLISH][i], size-1) == 0) {
+        if (strncmp( string,  dictionary[ENGLISH][i], size) == 0) {
             string_out = dictionary[FRENCH][i];
             break;
         }
@@ -64,13 +64,13 @@ void french_translate() {
     uart_buffer_t local = uart_buffer;
 
     // dbg
-    printf("GREAT SUCCESS `%s` - %i", local.buf, local.size);
+    printf("GREAT SUCCESS %s - %i\n", local.buf, local.size);
 
     // 3 and reset it
     ATOMIC_SET(uart_buffer.size, 0);
 
     // 3. translate what we've got using the local copy
-    char *buffer_out = translate_to_french(local.buf, local.size);
+    char *buffer_out = translate_to_french(local.buf, local.size - 1 /*do not pass the CR character*/);
 
     // 4. write translation (if exists) to uart
     if (buffer_out) {

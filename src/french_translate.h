@@ -9,7 +9,7 @@
 #define FRENCH_TRANSLATE_H_
 
 // Function prototypes
-char *translate_to_french(char *string, int size);
+char *translate_to_french(char const * const string, int size);
 
 /**
  * Translation function
