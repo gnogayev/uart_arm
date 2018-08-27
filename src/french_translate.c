@@ -5,22 +5,31 @@
  *      Author: gnogayev
  */
 
+#include <stdio.h> // putc, printf, getchar
+#include <string.h> // strncmp, memchr
 #include "french_translate.h"
-#include <stdio.h>
-#include <string.h> // memchr
 #include "uart_interrupt.h" // uart_buffer
+#include "uart_stub.h" // uart_tx_string
 
 #define ENGLISH          0
 #define FRENCH           1
 #define NUM_LANG         2
-#define DICTIONARY_SIZE  5
+#define DICTIONARY_SIZE  10
 
+/**
+ * Simplified version of English to French dictionary
+ */
 static char *dictionary[NUM_LANG][DICTIONARY_SIZE] =
 {
-        { "Hello", "Goodbye", "Thank you", "Man", "Woman" },
-        { "Bonjour", "Au revoir", "Merci", "Homme", "Femme" }
+        { "Hello", "Goodbye", "Thank you", "Man", "Woman", "Boy", "Girl", "House", "Car", "Work" },
+        { "Bonjour", "Au revoir", "Merci", "Homme", "Femme", "Garcon", "Fille", "Maison", "Voiture", "Travail" }
 };
 
+/**
+ * Helper function to do the translation
+ * 1. Check lookup table for English word
+ * 2. If word exists, return French translation
+ */
 char *translate_to_french(char const * const string, int size) {
     char *string_out = NULL;
     // Search for word translation in the dictionary
@@ -39,38 +48,38 @@ char *translate_to_french(char const * const string, int size) {
 
 /**
  * Translation function
+ *
+ * This function is called from the while loop of the idle task
  */
 void french_translate() {
 
-    /* Here we make an important assumption/ limitation,
-     * It is possible that the buffer will move forward after
-     * we chack for CR charcter. As this function clear the buffer, these
-     * new characters may be lost.
-     * In our implementation
-     * we assume that the user should wait untill he see's the response, therefore
-     * this situation avoided.
-     * In real life we'll have to use a bit more complicated ping pong buffer
-     * implementation, so no data is lost
+    /* NOTE: it is possible that the buffer will move forward after we check for CR
+     * character. As this function will clear the buffer, these new characters may be
+     * lost. Therefore, we make an important assumption that the user will not type a
+     * new word until the response for the current word is received.
+     * As a future optimization, a more complicated ping-pong buffer implementation
+     * is preferred, in order to avoid data loss.
      */
 
-    // 1. check if the buffer has CR character
+    // 1. Check if UART buffer has CR character
     if (NULL == memchr(uart_buffer.buf, '\n', uart_buffer.size)) {
         return;
     }
 
-    // 2. we've got the word, copy the buffer
+    // 2. Copy the full word to local buffer
     uart_buffer_t local = uart_buffer;
 
-    // 3 and reset it
+    // 3 Reset UART buffer
     ATOMIC_SET(uart_buffer.size, 0);
 
-    // 3. translate what we've got using the local copy
+    // 4. Translate word using local buffer copy
     char *buffer_out = translate_to_french(local.buf, local.size - 1 /*do not pass the CR character*/);
 
-    // 4. write translation (if exists) to uart
+    // 5. Write translation (if exists) to UART
     if (buffer_out) {
-        // WRITE TO UART Here
-        printf("OK - %s\n", buffer_out);
+        // Send translated word to UART
+        int size = strlen(buffer_out);
+        uart_tx_string(buffer_out, size);
     }
 
 }

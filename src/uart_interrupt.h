@@ -9,15 +9,16 @@
 #define UART_INTERRUPT_H_
 
 /**
- * For our use case lets assume the length of the longest English word:
+ * For our use case, we find the length of the longest English word below:
  * https://en.wikipedia.org/wiki/Longest_word_in_English
- * Let's use the longest in a major dictionary that is 45 carcters.
- * Let's have some spare space too (x2).
+ *
+ * Let's use the longest word in a major dictionary, which is 45 characters
+ * long and provide some extra space (x2).
  */
-#define UART_MAX_BUF (45 *2)
+#define UART_MAX_BUF (45 * 2)
 
 /**
- * The buffer structure
+ * UART buffer structure
  */
 typedef struct {
     char buf[UART_MAX_BUF];
@@ -25,13 +26,13 @@ typedef struct {
 } uart_buffer_t;
 
 /**
- * Delcare uart buffer
+ * Declare UART buffer
  */
 extern uart_buffer_t uart_buffer;
 
 /**
- * We can use only atocmic operations insede the interrupt handler
- * We assume this macro implements atomic set
+ * We can use only atomic operations inside the interrupt handler.
+ * We assume this macro implements atomic set.
  */
 #define ATOMIC_SET(X, Y) X = Y
 
